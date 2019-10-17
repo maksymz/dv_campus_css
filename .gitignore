@@ -1,4 +1,7 @@
 .idea/
 /node_modules/*
-/pub/css/responsive-styles.min.css*
 /var/*
+
+# Ignore generated files. Note that we do not have build system, so this is for demo and further development.
+/assets/dist/css/responsive-styles-processed.css
+/pub/css/responsive-styles.min.css*
