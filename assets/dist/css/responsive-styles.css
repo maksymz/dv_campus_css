@@ -4,6 +4,28 @@
     max-width: 1200px;
 }
 
-.main {
+nav {
+    padding: 20px 0;
+}
+
+#products ul {
     display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+#products ul li {
+    flex: 1 0 100%;
+    list-style-type: none;
+    margin-bottom: 20px;
+}
+
+#products ul li article {
+    margin: 0 auto;
+    text-align: center;
+    max-width: 250px;
+}
+
+#products ul li img {
+    max-width: 100%;
 }
