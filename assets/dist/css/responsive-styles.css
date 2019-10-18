@@ -29,3 +29,95 @@ nav {
 #products ul li img {
     max-width: 100%;
 }
+
+#contact {
+    margin: 30px auto;
+}
+
+#contact h2 {
+    text-align: center;
+}
+
+#contact label,
+#contact input,
+#contact textarea {
+    display: block;
+}
+
+#contact label {
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#contact input,
+#contact textarea {
+    padding: 5px;
+    width: calc(100% - 10px);
+}
+
+#contact .field {
+    margin-bottom: 20px;
+}
+
+#contact button {
+    background-color: blue;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    font-size: 18px;
+    padding: 10px;
+    transition-property: background-color;
+    transition-duration: .3s;
+    width: 100%;
+}
+
+#contact button:hover {
+    background-color: darkblue;
+}
+
+footer {
+    text-align: center;
+}
+
+@media screen and (min-width: 540px) {
+    #products ul li {
+        flex-basis: 50%;
+    }
+
+    #contact button {
+        display: block;
+        margin: 0 auto;
+        width: 50%;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #contact label,
+    #contact input,
+    #contact textarea {
+        display: inline-block;
+    }
+
+    #contact label {
+        line-height: 26px;
+        margin-bottom: 0;
+        text-align: right;
+        width: 28%;
+        vertical-align: top;
+    }
+
+    #contact input,
+    #contact textarea {
+        width: 50%;
+    }
+
+    #contact button {
+        width: 40%;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    #products ul li {
+        flex-basis: 25%;
+    }
+}
