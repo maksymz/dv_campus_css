@@ -29,10 +29,21 @@ module.exports = function(grunt) {
             }
         },
 
-    });
+        imagemin: {
+            dynamic: {
+                files: [{
+                    expand: true,
+                    cwd: 'assets/dist/images/',
+                    src: ['**/*.{png,jpg,gif}'],
+                    dest: 'pub/images/'
+                }]
+            }
+            }
+        });
 
     grunt.loadNpmTasks('grunt-postcss');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-contrib-imagemin');
 
-    grunt.registerTask('default', ['postcss', 'cssmin']);
+    grunt.registerTask('default', ['postcss', 'cssmin', 'imagemin']);
 };
