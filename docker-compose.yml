@@ -1,55 +1,80 @@
 # SSL certificates for development
-# $ mkcert dv-campus-css.local www.dv-campus-css.local
+# $ mkcert -cert-file=dv-campus-css.local+1.pem -key-file=dv-campus-css.local+1-key.pem dv-campus-css.local www.dv-campus-css.local
 #
-# DEVELOPMENT:
-# $ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d
-#
-# PRODUCTION:
+# Start composition:
 # $ docker-compose up -d
 #
-# MacOS (development only)
-# docker-sync-stack start
+# For MacOS users (development only)
+# $ docker-sync-stack start
 version: '3.7'
 services:
   php-apache:
     container_name: dv-campus-css.local
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        # needed for the build stage
-        # Install memcached inside container if needed. Better to use external Memcached container and only have
-        # php extension to connect to it
-        - MEMCACHED=0
+    # EXECUTION_ENVIRONMENT - 'development' or 'production'
+    image: defaultvalue/php:7.4-${EXECUTION_ENVIRONMENT}
+    # In case you need your own Dockerfile. Dockerfile example:
+    # ARG EXECUTION_ENVIRONMENT
+    # FROM defaultvalue/php:7.3-${EXECUTION_ENVIRONMENT}
+#    build:
+#      context: .
+#      dockerfile: docker/Dockerfile
+#      args:
+#        - EXECUTION_ENVIRONMENT=${EXECUTION_ENVIRONMENT}
+    user: docker:docker
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
     restart: always
     labels:
-      # - traefik.enable=false
-      - traefik.http.frontend.rule=Host:dv-campus-css.local,www.dv-campus-css.local
-      - traefik.http.frontend.entryPoints=http
-      - traefik.https.frontend.rule=Host:dv-campus-css.local,www.dv-campus-css.local
-      - traefik.https.frontend.entryPoints=https
-      - traefik.https.protocol=https
-      - traefik.https.port=443
+      - traefik.enable=true
+      # HTTP
+      - traefik.http.routers.dv-campus-css-local-http.rule=Host(`dv-campus-css.local`,`www.dv-campus-css.local`)
+      - traefik.http.routers.dv-campus-css-local-http.entrypoints=http
+      - traefik.http.routers.dv-campus-css-local-http.service=dv-campus-css-local-http
+      - traefik.http.services.dv-campus-css-local-http.loadbalancer.server.port=80
+      - traefik.http.services.dv-campus-css-local-http.loadbalancer.server.scheme=http
+      # HTTPS
+      - traefik.http.routers.dv-campus-css-local-https.rule=Host(`dv-campus-css.local`,`www.dv-campus-css.local`)
+      - traefik.http.routers.dv-campus-css-local-https.entrypoints=https
+      - traefik.http.routers.dv-campus-css-local-https.tls=true
+      - traefik.http.routers.dv-campus-css-local-https.service=dv-campus-css-local-https
+      - traefik.http.services.dv-campus-css-local-https.loadbalancer.server.port=443
+      - traefik.http.services.dv-campus-css-local-https.loadbalancer.server.scheme=https
+      # Develop with extension that allows setting livereload host and port - https://github.com/lokcito/livereload-extensions
+      - traefik.http.routers.dv-campus-css-local-livereload-https.rule=Host(`dv-campus-css.local`,`www.dv-campus-css.local`)
+      - traefik.http.routers.dv-campus-css-local-livereload-https.entrypoints=livereload-https
+      - traefik.http.routers.dv-campus-css-local-livereload-https.tls=true
+      - traefik.http.routers.dv-campus-css-local-livereload-https.service=dv-campus-css-local-livereload-https
+      - traefik.http.services.dv-campus-css-local-livereload-https.loadbalancer.server.port=35729
+      - traefik.http.services.dv-campus-css-local-livereload-https.loadbalancer.server.scheme=http
+      - traefik.http.routers.dv-campus-css-local-livereload-http.rule=Host(`dv-campus-css.local`,`www.dv-campus-css.local`)
+      - traefik.http.routers.dv-campus-css-local-livereload-http.entrypoints=livereload-http
+      - traefik.http.routers.dv-campus-css-local-livereload-http.service=dv-campus-css-local-livereload-http
+      - traefik.http.services.dv-campus-css-local-livereload-http.loadbalancer.server.port=35729
+      - traefik.http.services.dv-campus-css-local-livereload-http.loadbalancer.server.scheme=http
     # Must add extra_hosts to be written to /etc/hosts - otherwise containerized application can not curl itself
     extra_hosts:
       - "dv-campus-css.local www.dv-campus-css.local:127.0.0.1"
-#    links:
-#      - memcached
+      # Required for xDebug on Linux hosts till docker.host.internal is not available by default - https://github.com/docker/libnetwork/pull/2348/files
+      - "host.docker.internal:172.17.0.1"
     external_links:
       - mysql57:mysql
-#    networks:
-#      - reverse-proxy
+      - mailhog
     network_mode: bridge
+    environment:
+      # Must be set to some of the domains for xdebug to work. Should have server configured in
+      # Preferences > Language and Frameworks > PHP > Servers
+      # Or just run the project with the same domain and debug enabled in the browser
+      - PHP_IDE_CONFIG=serverName=dv-campus-css.local
+      # Go is required to catch emails with Mailhog and mhsendmail (Sendmail replacement)
+      - ADDITIONAL_PATH=/usr/local/go/bin
     volumes:
       - .:/var/www/html
-      - /misc/share/ssl:/certs
+      - ${SSL_CERTIFICATES_DIR}:/certs
       - ./docker/virtual-host.conf:/etc/apache2/sites-enabled/virtual-host.conf
+      # IMPORTANT! The below configuration is for Mac only to enable Docker Sync Stack. Don't commit!
+      #- dv-campus-css-local-sync:/var/www/html:nocopy
 
-#  memcached:
-#    image: 'memcached:1.5'
-#    network_mode: bridge
-#    restart: always
-
-#networks:
-#  reverse-proxy:
+# IMPORTANT! The below volumes configuration is for Mac only to enable Docker Sync Stack. Don't commit!
+#volumes:
+#  dv-campus-css-local-sync:
 #    external: true
